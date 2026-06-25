@@ -10,7 +10,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(basedir, '.env'))
 
 # use venv\Scripts\activate in cmd prompt to activate virtual environment before running this script
-# p in powershell to activate virtual environment before running this script
+# use .\venv\Scripts\Activate.ps1 in powershell to activate virtual environment before running this script
 # use python test_connections.py to run this 
 # use docker-compose up -d to start the containers before running this script
 print("Infrastructure connection testing")
