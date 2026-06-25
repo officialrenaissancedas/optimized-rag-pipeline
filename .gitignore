@@ -1,0 +1,11 @@
+# Ignore the Python virtual environment
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Ignore secret environment variables (CRUCIAL)
+.env
+
+# Ignore Docker database storage paths (if any are saved locally)
+.postgres_data/
