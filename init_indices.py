@@ -24,7 +24,7 @@ if not re.match(r"^[a-zA-Z0-9_]+$", DB_NAME):
     sys.exit(1)
 
 
-ES_HOST = os.getenv("ES_HOST", f"http://{os.getenv('ES_HOST', 'localhost')}:9200")
+ES_HOST = os.getenv("ES_HOST", "http://localhost:9200")
 QDRANT_URL = os.getenv("QDRANT_URL", "localhost")
 QDRANT_PORT = int(os.getenv("QDRANT_PORT", 6333))
 
