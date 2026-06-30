@@ -7,6 +7,7 @@ from qdrant_client.http import models
 from qdrant_client.http.exceptions import ResponseHandlingException, UnexpectedResponse
 from elasticsearch import Elasticsearch, exceptions as es_exceptions
 import psycopg2
+from psycopg2 import sql
 
 DB_NAME = os.getenv("DB_NAME", "rag")
 DB_USER = os.getenv("DB_USER")
@@ -24,16 +25,21 @@ if not re.match(r"^[a-zA-Z0-9_]+$", DB_NAME):
     sys.exit(1)
 
 
-ES_HOST = os.getenv("ES_HOST", "http://localhost:9200")
-QDRANT_URL = os.getenv("QDRANT_URL", "localhost")
-QDRANT_PORT = int(os.getenv("QDRANT_PORT", 6333))
+ES_HOST = os.getenv("ES_HOST")
+QDRANT_URL = os.getenv("QDRANT_URL")
+QDRANT_PORT = os.getenv("QDRANT_PORT")
+
+if not ES_HOST or not QDRANT_URL or not QDRANT_PORT:
+    print("❌ Security Error: ES_HOST, QDRANT_URL, or QDRANT_PORT environment variables are missing from memory!")
+    sys.exit(1)
+
+QDRANT_PORT = int(QDRANT_PORT)
 
 # needs to be switched out for a logging system later on in development.
 print("🔄 Bootstrapping local 4-container multi-database indexing layers...")
 
 MAX_RETRIES = 5
 RETRY_DELAY = 3
-
 
 # 1. POSTGRES Relational Metadata layer
 try:
@@ -53,7 +59,9 @@ try:
         admin_cursor.execute("SELECT 1 FROM pg_catalog.pg_database WHERE datname = %s;", (DB_NAME,))
         if not admin_cursor.fetchone():
             print(f"🛠️ Target database '{DB_NAME}' not found. Creating it now...")
-            admin_cursor.execute(f'CREATE DATABASE "{DB_NAME}";')
+            admin_cursor.execute(
+                sql.SQL('CREATE DATABASE {}').format(sql.Identifier(DB_NAME))
+            )
     pg_admin_conn.close()
 except Exception as init_db_err:
     print(f"❌ Database preparation failed. Could not check or create database '{DB_NAME}'. Details: {init_db_err}")
@@ -155,7 +163,8 @@ except Exception as es_unexpected_err:
 print("\n🔄 Initializing Qdrant vector engine layer...")
 
 try:
-    qdrant_client = QdrantClient(url=QDRANT_URL, port=QDRANT_PORT, timeout=3.0)
+    
+    qdrant_client = QdrantClient(url=QDRANT_URL)
     collection_name = "semantic_document_embeddings"
     
     for attempt in range(1, MAX_RETRIES + 1):
